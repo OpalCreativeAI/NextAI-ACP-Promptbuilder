@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Assistant - ACP Prompt Builder</title>
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-0: #0b0f15;           /* very dark */
+      --bg-1: #0f1520;           /* card base */
+      --bg-2: #151c28;           /* panel */
+      --accent: #7dd3fc;         /* sky-300 */
+      --accent-2: #a78bfa;       /* violet-400 */
+      --text-0: #f8fafc;         /* slate-50 */
+      --text-1: #cbd5e1;         /* slate-300 */
+      --muted: #94a3b8;          /* slate-400 */
+      --success: #34d399;        /* emerald-400 */
+      --warning: #fbbf24;        /* amber-400 */
+      --danger: #f87171;         /* red-400 */
+      --ring: rgba(125, 211, 252, 0.45);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --radius-lg: 24px;
+      --shadow-1: 0 10px 25px rgba(0,0,0,.35);
+      --shadow-2: 0 20px 45px rgba(0,0,0,.45);
+      --grad-1: radial-gradient(1200px 600px at 10% -10%, rgba(59,130,246,0.15), transparent),
+                radial-gradient(800px 400px at 90% 10%, rgba(168,85,247,0.15), transparent),
+                linear-gradient(180deg, #0b0f15 0%, #0b0f15 100%);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:"Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--grad-1);
+      color: var(--text-0);
+      line-height:1.5;
+    }
+
+    .container{
+      max-width: 1100px; margin: 48px auto; padding: 0 24px;
+    }
+
+    /* Header */
+    .badge{
+      display:inline-flex; align-items:center; gap:8px; padding:8px 12px;
+      border-radius: 999px; background: linear-gradient(90deg, rgba(125,211,252,.12), rgba(167,139,250,.12));
+      border: 1px solid rgba(148,163,184,.25);
+      color: var(--text-1); font-weight: 500; font-size: 13px; letter-spacing:.2px;
+      backdrop-filter: blur(6px);
+    }
+    .badge::before{
+      content:""; width:8px; height:8px; border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, var(--accent), transparent 70%);
+      box-shadow: 0 0 20px var(--accent);
+      animation: pulse 2.6s ease-in-out infinite;
+    }
+    @keyframes pulse{0%,100%{transform:scale(.9); opacity:.8}50%{transform:scale(1.2); opacity:1}}
+
+    h1.title{
+      margin: 18px 0 6px; font-weight: 800; font-size: 34px; letter-spacing:-0.02em;
+      background: linear-gradient(90deg, #e2e8f0, #c7d2fe 60%, #a5f3fc);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    p.subtitle{ margin: 0 0 24px; color: var(--muted); font-weight:300; max-width: 900px; }
+
+    /* Card */
+    .card{
+      position: relative; background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      border: 1px solid rgba(148,163,184,.18); border-radius: var(--radius-lg); box-shadow: var(--shadow-1);
+      overflow: hidden;
+    }
+    .card::before{
+      content:""; position:absolute; inset:-1px; border-radius: inherit; padding:1px;
+      background: linear-gradient(135deg, rgba(125,211,252,.35), rgba(167,139,250,.35)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
+    }
+    .card-inner{ padding: 22px; }
+
+    /* Primary CTA */
+    .actions{ display:flex; flex-wrap:wrap; gap:12px; margin: 6px 0 10px; }
+    .btn{
+      appearance:none; border:none; cursor:pointer; border-radius: 14px; padding: 12px 16px;
+      background: linear-gradient(180deg, rgba(2,6,23,.9), rgba(2,6,23,.8));
+      color: var(--text-0); font-weight:600; letter-spacing:.2px; box-shadow: inset 0 0 0 1px rgba(148,163,184,.25);
+      transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); box-shadow: 0 10px 24px rgba(2,6,23,.5), inset 0 0 0 1px var(--ring); }
+    .btn:active{ transform: translateY(0); }
+
+    .btn-primary{
+      background: linear-gradient(90deg, rgba(125,211,252,.18), rgba(167,139,250,.18));
+      box-shadow: inset 0 0 0 1px rgba(125,211,252,.35), 0 10px 24px rgba(30,58,138,.35);
+    }
+
+    .btn-success{ box-shadow: inset 0 0 0 1px rgba(52,211,153,.35); }
+    .btn-ghost{ background: rgba(255,255,255,.04); }
+    .btn-warning{ box-shadow: inset 0 0 0 1px rgba(251,191,36,.35); }
+    .btn-danger{ box-shadow: inset 0 0 0 1px rgba(248,113,113,.35); }
+
+    /* Panel (collapsed by default) */
+    .panel{ display:none; }
+    .panel.open{ display:block; }
+
+    .grid{
+      display:grid; gap:14px; grid-template-columns: repeat(12, 1fr);
+    }
+    .col-4{ grid-column: span 4; }
+    .col-6{ grid-column: span 6; }
+    .col-8{ grid-column: span 8; }
+    .col-12{ grid-column: 1/-1; }
+
+    .field{
+      background: var(--bg-2); border:1px solid rgba(148,163,184,.18); border-radius: var(--radius);
+      padding: 14px 14px 10px; box-shadow: var(--shadow-1);
+    }
+    .label{ display:block; font-size:12px; color: var(--text-1); margin-bottom:8px; letter-spacing:.25px; }
+    select, input, textarea{
+      width:100%; background: rgba(255,255,255,.04); border:1px solid rgba(148,163,184,.22);
+      color: var(--text-0); padding: 11px 12px; border-radius: 12px; outline:none;
+      transition: border .15s ease, box-shadow .15s ease;
+    }
+    select:focus, input:focus, textarea:focus{ box-shadow: 0 0 0 3px var(--ring); border-color: transparent; }
+    textarea{ min-height: 140px; resize: vertical; }
+
+    .toolbar{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+
+    .preview{
+      background: #0a0f16; border:1px dashed rgba(148,163,184,.35); border-radius: var(--radius);
+      padding: 16px; color: var(--text-1); white-space: pre-wrap; box-shadow: inset 0 0 0 1px rgba(148,163,184,.12);
+    }
+
+    .hint{ color: var(--muted); font-size: 12px; }
+
+    .footer{
+      margin-top: 26px; color: var(--muted); font-size:12px;
+    }
+
+    @media(max-width: 860px){
+      .col-4, .col-6, .col-8{ grid-column: 1/-1; }
+      .actions{ gap:8px }
+    }
+
+    /* ==== Etapa 2: stiluri specifice Apartament ==== */
+    .section-title{
+      margin: 14px 0 10px; font-weight: 700; font-size: 16px; letter-spacing:.2px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .section-title::before{
+      content:""; width: 6px; height: 18px; border-radius: 999px;
+      background: linear-gradient(180deg, rgba(125,211,252,.9), rgba(167,139,250,.9));
+      box-shadow: 0 0 18px rgba(125,211,252,.45);
+    }
+    .two-col{ display:grid; grid-template-columns: repeat(12, 1fr); gap:14px; }
+    .two-col > .col-6{ grid-column: span 6; }
+    @media(max-width: 860px){ .two-col > .col-6{ grid-column: 1/-1; } }
+
+    .checkgroup{
+      display:grid; grid-template-columns: repeat(12, 1fr); gap:10px;
+      padding: 6px; background: rgba(255,255,255,.02); border:1px solid rgba(148,163,184,.14); border-radius: 12px;
+    }
+    .checkgroup .item{
+      grid-column: span 4; display:flex; align-items:center; gap:8px;
+      padding:10px 12px; border-radius:12px; background: rgba(255,255,255,.04);
+      border:1px solid rgba(148,163,184,.14);
+    }
+    @media(max-width: 1024px){ .checkgroup .item{ grid-column: span 6; } }
+    @media(max-width: 600px){ .checkgroup .item{ grid-column: 1/-1; } }
+
+    .checkgroup input[type="checkbox"]{ width:16px; height:16px; }
+    .muted{ color: var(--muted); font-size:12px; }
+    .inline{ display:flex; align-items:center; gap:8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">Dashboard inteligent creat de Opal AI Studio</div>
+    <h1 class="title">AI Assistant - ACP Prompt Builder</h1>
+    <p class="subtitle">Panoul tău inteligent pentru generarea rapidă de prompturi complete pentru generarea de ACP. Completează câmpurile necesare, generează promptul, copiază și lipește în panoul de comunicare al Asistentului AI Next Imobiliare.</p>
+
+    <div class="card" role="region" aria-labelledby="panel-title">
+      <div class="card-inner">
+        <div class="actions">
+          <button id="openPanelBtn" class="btn btn-primary" aria-expanded="false">Crează ACP</button>
+        </div>
+
+        <!-- Interactive Panel (collapsed until user clicks) -->
+        <div id="panel" class="panel" aria-hidden="true">
+          <h2 id="panel-title" style="margin:6px 0 14px; font-weight:700; font-size:20px;">Setări inițiale</h2>
+
+          <div class="grid">
+            <div class="field col-4">
+              <label for="propertyType" class="label">Tip proprietate</label>
+              <select id="propertyType" data-field data-label="Tip proprietate">
+                <option value="">— selectează —</option>
+                <option>Apartament</option>
+                <option>Casă/Vilă</option>
+                <option>Teren</option>
+              </select>
+              <div class="hint">Selectează tipul pentru a încărca setul de întrebări potrivit (urmează în Etapa 2).</div>
+            </div>
+
+            <!-- Placeholder for dynamic blocks -->
+            <div id="dynamicFields" class="col-12"></div>
+
+            <!-- Toolbar -->
+            <div class="col-12">
+              <div class="toolbar">
+                <button id="generateBtn" class="btn btn-success">Generează prompt</button>
+                <button id="previewBtn" class="btn btn-ghost">Previzualizează prompt</button>
+                <button id="resetBtn" class="btn btn-warning">Reset</button>
+                <button id="copyBtn" class="btn btn-danger">Copiază prompt</button>
+              </div>
+            </div>
+
+            <!-- Preview Area -->
+            <div id="previewArea" class="col-12" style="display:none;">
+              <div class="preview" id="previewBox" aria-live="polite"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="footer">Sugestie: după generare, folosește „Copiază prompt” și lipește în ChatGPT pentru a rula analiza.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ————————————————
+    // Helper: Toast (lightweight)
+    // ————————————————
+    const toast = (msg, type = "info") => {
+      const el = document.createElement('div');
+      el.textContent = msg;
+      el.style.position = 'fixed';
+      el.style.bottom = '22px';
+      el.style.right = '22px';
+      el.style.padding = '10px 14px';
+      el.style.background = type === 'success' ? 'rgba(52,211,153,.15)' : type === 'warn' ? 'rgba(251,191,36,.15)' : 'rgba(125,211,252,.12)';
+      el.style.border = '1px solid rgba(148,163,184,.35)';
+      el.style.color = '#e2e8f0';
+      el.style.backdropFilter = 'blur(6px)';
+      el.style.borderRadius = '12px';
+      el.style.zIndex = 9999;
+      el.style.boxShadow = '0 10px 24px rgba(0,0,0,.35)';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2200);
+    };
+
+    // ————————————————
+    // Panel Toggle
+    // ————————————————
+    const openPanelBtn = document.getElementById('openPanelBtn');
+    const panel = document.getElementById('panel');
+    const previewArea = document.getElementById('previewArea');
+
+    openPanelBtn.addEventListener('click', () => {
+      const isOpen = panel.classList.toggle('open');
+      panel.setAttribute('aria-hidden', String(!isOpen));
+      openPanelBtn.setAttribute('aria-expanded', String(isOpen));
+      if(isOpen){ toast('Panou deschis. Completează câmpurile.'); }
+    });
+
+    // ————————————————
+    // Prompt Template (static). Injectăm Context dinamic.
+    // ————————————————
+    const PROMPT_TEMPLATE = (contextBlock) => `
+<Rol>
+Ești un profesionist în cercetare de piață imobiliară și realizezi cele mai corecte analize comparative de piață pentru stabilirea prețului corect de listare a unei proprietăți imobiliare în Județul Constanța.
+</Rol>
+
+<Task>
+Generează o analiză comparativă de piață pentru proprietatea definită mai jos:
+</Task>
+
+<Context>
+Detaliile proprietății-subiect (cea care se compară cu piața):
+
+${contextBlock.trim() || '(Nu au fost furnizate încă detalii. Solicită utilizatorului să completeze câmpurile relevante.)'}
+</Context>
+
+<Criterii de comparație și instrucțiuni>
+Identifică 4-6 proprietăți similare listate în ultimele 8 luni în zona proprietățiii (sau într-un perimetru de maxim 1km) și caută toate informațiile de profil despre zonă: rapoarte ale pieței imobiliare referitoare la prețul zonei, date statistice ANCPI și alte autorități sau companii private.
+Prezintă-le într-un tabel cu: suprafață, an construcție, etaj, preț cerut, €/mp, avantaje/dezavantaje.
+Fă un rezumat narativ (max. 2 paragrafe) care explică unde se poziționează proprietatea analizată față de comparabile.
+Propune un interval de preț de listare recomandat și oferă 3 argumente pro + 3 riscuri/contra.
+</Criterii de comparație și instrucțiuni>
+
+<tonul folosit>
+Scrie într-un ton profesionist și clar, astfel încât textul să poată fi prezentat direct proprietarului.
+</tonul folosit>`;
+
+    // ======================================================
+    // Etapa 2 — funcții UI pentru tipul "Apartament"
+    // ======================================================
+
+    // Render grupuri checkbox elegante
+    function renderCheckboxGroup(groupLabel, options){
+      const groupId = groupLabel.toLowerCase().replace(/[^a-z0-9]+/gi,'-');
+      const items = options.map((opt, idx) => {
+        const id = `${groupId}-${idx}`;
+        const safe = opt.replace(/\\"/g,'\\\"');
+        return `
+        <label class="item">
+          <input type="checkbox" id="${id}" value="${safe}" data-group="${groupLabel}"/>
+          <span>${opt}</span>
+        </label>`;
+      }).join('');
+      return `
+        <div class="label" style="margin-top:12px;">${groupLabel}</div>
+        <div class="checkgroup" role="group" aria-label="${groupLabel}">
+          ${items}
+        </div>`;
+    }
+
+    // Formularul pentru Apartament
+    function renderApartmentFields(){
+      return `
+        <div class="field">
+          <div class="section-title">Secțiunea 1: Informații Generale</div>
+          <div class="two-col">
+            <!-- Text scurt -->
+            <div class="col-6">
+              <label class="label" for="addr">Adresă exactă</label>
+              <input id="addr" data-field data-label="Adresă exactă" placeholder="Adresă exactă" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="zone">Zonă</label>
+              <input id="zone" data-field data-label="Zonă" placeholder="Zonă" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="rooms">Număr de camere</label>
+              <input id="rooms" data-field data-label="Număr de camere" placeholder="ex: 2" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="supUtila">Suprafața utilă</label>
+              <input id="supUtila" data-field data-label="Suprafața utilă" placeholder="ex: 60 mp" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="supTotala">Suprafața totală</label>
+              <input id="supTotala" data-field data-label="Suprafața totală" placeholder="ex: 70 mp" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="balcoane">Număr balcoane</label>
+              <input id="balcoane" data-field data-label="Număr balcoane" placeholder="ex: 2" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="supBalcoane">Suprafață balcoane</label>
+              <input id="supBalcoane" data-field data-label="Suprafață balcoane" placeholder="ex: 8 mp" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="parcari">Nr. locuri parcare</label>
+              <input id="parcari" data-field data-label="Nr. locuri parcare" placeholder="ex: 1" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="anConstr">An construcție</label>
+              <input id="anConstr" data-field data-label="An construcție" placeholder="ex: 2010" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="etaj">Etaj</label>
+              <input id="etaj" data-field data-label="Etaj" placeholder="ex: 4/10" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="stadiu">Stadiu construcție</label>
+              <select id="stadiu" data-field data-label="Stadiu construcție">
+                <option value="">— selectează —</option>
+                <option>Finalizată</option>
+                <option>Finisat</option>
+                <option>Semifinisată</option>
+                <option>În Construcție</option>
+                <option>La Gri</option>
+                <option>La Roșu</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="finisaje">Calitate Finisaje</label>
+              <select id="finisaje" data-field data-label="Calitate Finisaje">
+                <option value="">— selectează —</option>
+                <option>Clasic</option>
+                <option>Modern</option>
+                <option>Premium</option>
+                <option>Lux</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="compartimentare">Compartimentare</label>
+              <select id="compartimentare" data-field data-label="Compartimentare">
+                <option value="">— selectează —</option>
+                <option>Decomandat</option>
+                <option>Semidecomandat</option>
+                <option>Nedecomandat</option>
+                <option>Circular</option>
+                <option>Vagon</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="tipStruct">Tipul construcției</label>
+              <div class="inline">
+                <select id="tipStruct" data-field data-label="Tipul construcției">
+                  <option value="">— selectează —</option>
+                  <option>Structură Beton</option>
+                  <option>BCA</option>
+                  <option>Cărămidă</option>
+                  <option>Altele</option>
+                </select>
+                <input id="tipStructOther" placeholder="specifică tipul" style="display:none; width:50%" />
+              </div>
+              <div class="muted">Dacă alegi „Altele”, poți completa manual.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="section-title">Secțiunea 2: Detalii proprietate</div>
+          <div class="two-col">
+            <div class="col-6">
+              <label class="label" for="mobilare">Grad de mobilare</label>
+              <select id="mobilare" data-field data-label="Grad de mobilare">
+                <option value="">— selectează —</option>
+                <option>Mobilat complet</option>
+                <option>Mobilat parțial</option>
+                <option>Nemobilat</option>
+                <option>Mobilat lux</option>
+              </select>
+            </div>
+
+            <div class="col-6">
+              <label class="label" for="tipStruct">Tipul construcției</label>
+              <div class="inline">
+                <select id="tipStruct" data-field data-label="Tipul construcției">
+                  <option value="">— selectează —</option>
+                  <option>Structură Beton</option>
+                  <option>BCA</option>
+                  <option>Cărămidă</option>
+                  <option>Altele</option>
+                </select>
+                <input id="tipStructOther" placeholder="specifică tipul" style="display:none; width:50%" />
+              </div>
+              <div class="muted">Dacă alegi „Altele”, poți completa manual.</div>
+            </div>
+          </div>
+
+          ${renderCheckboxGroup('Dotări', [
+            'Aer condiționat','Aeroterme','Gaz','Interfon','TV','Sistem de alarmă','Mașină de spălat rufe','Dressing','Lift','Scară interioară'
+          ])}
+
+          ${renderCheckboxGroup('Bucătărie', [
+            'Bucătărie deschisă','Bucătărie închisă','Bucătărie mobilată','Bucătărie utilată','Chicinetă','Aragaz','Frigider','Hotă','Mașină de spălat vase'
+          ])}
+
+          ${renderCheckboxGroup('Podele', [
+            'Șapă','Dușumea','Gresie','Linoleum','Mochetă','Parchet','Parchet laminat'
+          ])}
+
+          ${renderCheckboxGroup('Baie', [
+            'Bideu','Cabină de duș','Cadă','Jacuzzi'
+          ])}
+
+          ${renderCheckboxGroup('Sistem de încălzire', [
+            'Calorifere','Centrală imobil','Centrală proprie','Încălzire prin pardoseală','Pompă de căldură','Termoficare'
+          ])}
+
+          ${renderCheckboxGroup('Contorizare', [
+            'Apometre','Contor electric','Contor gaz'
+          ])}
+
+          ${renderCheckboxGroup('Vedere și geamuri', [
+            'Vedere panoramică','Vedere spre lac','Vedere spre mare','Vedere spre oraș','Ferestre PVC','Geamuri termopan','Rulouri / obloane'
+          ])}
+
+        </div>
+      `;
+    }
+
+    // Formularul pentru Casă / Vilă
+    function renderHouseFields(){
+      return `
+        <div class="field">
+          <div class="section-title">Secțiunea 1: Informații Generale</div>
+          <div class="two-col">
+            <div class="col-6">
+              <label class="label" for="addrHouse">Adresă exactă</label>
+              <input id="addrHouse" data-field data-label="Adresă exactă" placeholder="Adresă exactă" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="zoneHouse">Zonă</label>
+              <input id="zoneHouse" data-field data-label="Zonă" placeholder="Zonă" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="roomsHouse">Număr de camere</label>
+              <input id="roomsHouse" data-field data-label="Număr de camere" placeholder="ex: 4" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="supUtilaHouse">Suprafața utilă</label>
+              <input id="supUtilaHouse" data-field data-label="Suprafața utilă" placeholder="ex: 120 mp" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="supConstruitaHouse">Suprafața construită</label>
+              <input id="supConstruitaHouse" data-field data-label="Suprafața construită" placeholder="ex: 140 mp" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="supDesfasurataHouse">Suprafață desfășurată (amprentă la sol)</label>
+              <input id="supDesfasurataHouse" data-field data-label="Suprafață desfășurată" placeholder="ex: 80 mp" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="supTerenHouse">Suprafață teren</label>
+              <input id="supTerenHouse" data-field data-label="Suprafață teren" placeholder="ex: 400 mp" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="deschidereStradala">Deschidere stradală (ml)</label>
+              <input id="deschidereStradala" data-field data-label="Deschidere stradală" placeholder="ex: 8 ml" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="numarBalcoaneHouse">Număr balcoane</label>
+              <input id="numarBalcoaneHouse" data-field data-label="Număr balcoane" placeholder="ex: 2" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="supBalcoaneHouse">Suprafață balcoane</label>
+              <input id="supBalcoaneHouse" data-field data-label="Suprafață balcoane" placeholder="ex: 12 mp" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="parcariHouse">Nr. locuri parcare</label>
+              <input id="parcariHouse" data-field data-label="Nr. locuri parcare" placeholder="ex: 2" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="nrNiveluri">Nr. niveluri</label>
+              <input id="nrNiveluri" data-field data-label="Nr. niveluri" placeholder="ex: P+1" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="anConstrHouse">An construcție</label>
+              <input id="anConstrHouse" data-field data-label="An construcție" placeholder="ex: 2005" />
+            </div>
+
+            <!-- Dropdown-uri specifice casei -->
+            <div class="col-6">
+              <label class="label" for="stadiuHouse">Stadiu construcție</label>
+              <select id="stadiuHouse" data-field data-label="Stadiu construcție">
+                <option value="">— selectează —</option>
+                <option>Finalizată</option>
+                <option>Finisat</option>
+                <option>Semifinisată</option>
+                <option>În Construcție</option>
+                <option>La Gri</option>
+                <option>La Roșu</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="tipCasa">Tip casă</label>
+              <select id="tipCasa" data-field data-label="Tip casă">
+                <option value="">— selectează —</option>
+                <option>Individuală</option>
+                <option>Vilă</option>
+                <option>Calcan</option>
+                <option>Duplex</option>
+                <option>Triplex</option>
+                <option>Casă Înșiruită</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="acoperis">Acoperiș</label>
+              <select id="acoperis" data-field data-label="Acoperiș">
+                <option value="">— selectează —</option>
+                <option>Tablă</option>
+                <option>Țiglă</option>
+                <option>Șindrilă</option>
+                <option>Terasă</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="finisajeHouse">Calitate Finisaje</label>
+              <select id="finisajeHouse" data-field data-label="Calitate Finisaje">
+                <option value="">— selectează —</option>
+                <option>Clasic</option>
+                <option>Modern</option>
+                <option>Premium</option>
+                <option>Lux</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="compartHouse">Compartimentare</label>
+              <select id="compartHouse" data-field data-label="Compartimentare">
+                <option value="">— selectează —</option>
+                <option>Decomandat</option>
+                <option>Semidecomandat</option>
+                <option>Nedecomandat</option>
+                <option>Circular</option>
+                <option>Vagon</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="tipStructHouse">Tipul construcției</label>
+              <div class="inline">
+                <select id="tipStructHouse" data-field data-label="Tipul construcției">
+                  <option value="">— selectează —</option>
+                  <option>Structură Beton</option>
+                  <option>BCA</option>
+                  <option>Cărămidă</option>
+                  <option>Altele</option>
+                </select>
+                <input id="tipStructOtherHouse" placeholder="specifică tipul" style="display:none; width:50%" />
+              </div>
+              <div class="muted">Dacă alegi „Altele”, poți completa manual.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="section-title">Secțiunea 2: Detalii proprietate</div>
+          <div class="two-col">
+            <div class="col-6">
+              <label class="label" for="mobilareHouse">Grad de mobilare</label>
+              <select id="mobilareHouse" data-field data-label="Grad de mobilare">
+                <option value="">— selectează —</option>
+                <option>Mobilat complet</option>
+                <option>Mobilat lux</option>
+                <option>Mobilat parțial</option>
+                <option>Nemobilat</option>
+              </select>
+            </div>
+          </div>
+
+          ${renderCheckboxGroup('Dotări', [
+            'Aer condiționat','Aeroterme','Gaz','Interfon','TV','Sistem de alarmă','Șemineu','Mașină de spălat rufe','Dressing','Scară interioară','Garaj'
+          ])}
+
+          ${renderCheckboxGroup('Bucătărie', [
+            'Bucătărie deschisă','Bucătărie închisă','Bucătărie mobilată','Bucătărie parțial mobilată','Bucătărie parțial utilată','Bucătărie utilată','Chicinetă','Aragaz','Frigider','Hotă','Mașină de spălat vase'
+          ])}
+
+          ${renderCheckboxGroup('Podele', [
+            'Șapă','Dușumea','Gresie','Linoleum','Mochetă','Parchet','Parchet laminat','Podele granit','Podele marmură','Podele piatră naturală'
+          ])}
+
+          ${renderCheckboxGroup('Baie', [
+            'Bideu','Cabină de duș','Cadă','Duș exterior','Jacuzzi'
+          ])}
+
+          ${renderCheckboxGroup('Sistem de încălzire', [
+            'Calorifere','Centrală cu lemne','Centrală imobil','Centrală proprie','Încălzire diesel','Încălzire prin pardoseală','Pompă de căldură','Sobă / Teracotă','Termoficare','Ventiloconvectoare','Izolație exterioară','Izolație interioară'
+          ])}
+
+          ${renderCheckboxGroup('Contorizare', [
+            'Apometre','Contor căldură','Contor electric','Contor gaz'
+          ])}
+
+          ${renderCheckboxGroup('Ușă intrare și uși interioare', [
+            'Ușă intrare lemn','Ușă intrare metal','Ușă intrare pal','Ușă intrare PVC','Ușă intrare sticlă','Uși interior celulare','Uși interior lemn','Uși interior MDF','Uși interior cu panel','Uși interior PVC','Uși interior sticlă'
+          ])}
+
+          ${renderCheckboxGroup('Vedere și geamuri', [
+            'Vedere panoramică','Vedere spre lac','Vedere spre mare','Vedere spre oraș','Ferestre lemn','Ferestre PVC','Geamuri cu izolație fonică','Geamuri cu protecție UV','Geamuri termopan','Geamuri tripan','Rulouri / obloane aluminiu','Rulouri / obloane electrice','Rulouri / obloane lemn','Rulouri / obloane manuale','Rulouri / obloane PVC'
+          ])}
+
+        </div>
+      `;
+    }
+
+    // Formularul pentru Teren
+    function renderTerenFields(){
+      return `
+        <div class="field">
+          <div class="section-title">Secțiunea 1: Caracteristici teren</div>
+          <div class="two-col">
+            <div class="col-6">
+              <label class="label" for="addrTeren">Adresă teren</label>
+              <input id="addrTeren" data-field data-label="Adresă teren" placeholder="ex: Str. Lăcrămioarei 12" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="localitateTeren">Localitate</label>
+              <input id="localitateTeren" data-field data-label="Localitate" placeholder="ex: Constanța" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="suprafataTeren">Suprafață teren (mp/ha)</label>
+              <input id="suprafataTeren" data-field data-label="Suprafață teren" placeholder="ex: 400 mp" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="frontStradal">Front stradal (m)</label>
+              <input id="frontStradal" data-field data-label="Front stradal (m)" placeholder="ex: 12" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="nrFronturi">Nr. fronturi stradale</label>
+              <input id="nrFronturi" data-field data-label="Nr. fronturi stradale" placeholder="ex: 1" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="distantaDrum">Distanța față de drum (km)</label>
+              <input id="distantaDrum" data-field data-label="Distanța față de drum (km)" placeholder="ex: 0.2" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="distantaUtilitati">Distanța față de utilități (m)</label>
+              <input id="distantaUtilitati" data-field data-label="Distanța față de utilități (m)" placeholder="ex: 50" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="inclinație">Înclinație (°)</label>
+              <input id="inclinatieTeren" data-field data-label="Înclinație (°)" placeholder="ex: 5" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="constructiePeTeren">Construcție pe teren (Da/Nu)</label>
+              <input id="constructiePeTerenField" data-field data-label="Construcție pe teren" placeholder="Da / Nu" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="supConstruitaTeren">S. construită (mp)</label>
+              <input id="supConstruitaTeren" data-field data-label="S. construită (mp)" placeholder="ex: 0" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="valoareIncidenta">Valoare incidență</label>
+              <input id="valoareIncidentaTeren" data-field data-label="Valoare incidență" placeholder="ex: 0.1" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="gradComasare">Grad de comasare (%)</label>
+              <input id="gradComasareTeren" data-field data-label="Grad de comasare (%)" placeholder="ex: 100" />
+            </div>
+
+            <!-- Dropdown-uri teren -->
+            <div class="col-6">
+              <label class="label" for="tipTeren">Tip teren</label>
+              <select id="tipTeren" data-field data-label="Tip teren">
+                <option value="">— selectează —</option>
+                <option>Construcții</option>
+                <option>Agricol</option>
+                <option>Pădure</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="clasificareTeren">Clasificare</label>
+              <select id="clasificareTeren" data-field data-label="Clasificare">
+                <option value="">— selectează —</option>
+                <option>Intravilan</option>
+                <option>Extravilan</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="deschidereLa">Deschidere la</label>
+              <select id="deschidereLa" data-field data-label="Deschidere la">
+                <option value="">— selectează —</option>
+                <option>Șosea</option>
+                <option>Drum Principal</option>
+                <option>DN</option>
+                <option>Drum Județean</option>
+                <option>Autostradă</option>
+                <option>Șoseaua de Centură</option>
+                <option>Lac</option>
+                <option>Pădure</option>
+                <option>Drum de Servitute</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="destinatie">Destinație</label>
+              <select id="destinatie" data-field data-label="Destinație">
+                <option value="">— selectează —</option>
+                <option>Rezidențial</option>
+                <option>Comercial</option>
+                <option>Agricol</option>
+                <option>Școală / Grădiniță</option>
+                <option>Restaurant / Cafenea</option>
+                <option>Benzinărie</option>
+                <option>Hotel / Pensiune</option>
+                <option>Spital / Clinică</option>
+                <option>De vacanță</option>
+                <option>Spălătorie auto</option>
+                <option>Industrial</option>
+                <option>Agricol</option>
+                <option>Retail</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="section-title">Secțiunea 2: Urbanism și alte caracteristici teren</div>
+          <div class="two-col">
+            <div class="col-6">
+              <label class="label" for="cut">CUT</label>
+              <input id="cut" data-field data-label="CUT" placeholder="ex: 2.5" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="pot">POT (%)</label>
+              <input id="potField" data-field data-label="POT (%)" placeholder="ex: 30" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="utr">UTR</label>
+              <input id="utr" data-field data-label="UTR" placeholder="ex: L1a" />
+            </div>
+            <div class="col-6">
+              <label class="label" for="nrNiveluriMax">Nr. Niveluri Max.</label>
+              <input id="nrNiveluriMax" data-field data-label="Nr. Niveluri Max." placeholder="ex: P+2" />
+            </div>
+
+            <!-- Dropdown urbanism -->
+            <div class="col-6">
+              <label class="label" for="puz">PUZ</label>
+              <select id="puz" data-field data-label="PUZ">
+                <option value="">— selectează —</option>
+                <option>PUZ Aprobat</option>
+                <option>PUZ în lucru</option>
+                <option>Nu necesită PUZ</option>
+                <option>Necesită PUZ</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="pud">PUD</label>
+              <select id="pud" data-field data-label="PUD">
+                <option value="">— selectează —</option>
+                <option>PUD Aprobat</option>
+                <option>PUD în lucru</option>
+                <option>Nu necesită PUD</option>
+                <option>Necesită PUD</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="autorizatieConstructieField">Autorizație de construcție</label>
+              <select id="autorizatieConstructieField" data-field data-label="Autorizație de construcție">
+                <option value="">— selectează —</option>
+                <option>Da</option>
+                <option>Nu</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="label" for="certificatUrbanismField">Certificat de urbanism</label>
+              <select id="certificatUrbanismField" data-field data-label="Certificat de urbanism">
+                <option value="">— selectează —</option>
+                <option>Da</option>
+                <option>Nu</option>
+              </select>
+            </div>
+          </div>
+
+          ${renderCheckboxGroup('Alte caracteristici', [
+            'Acces auto','Construcție demolabilă','La șosea','Oportunitate de investiții','Parcelabil','Studiu Geo','Teren împrejmuit'
+          ])}
+
+          ${renderCheckboxGroup('Utilități teren', [
+            'Apă','Canalizare','Curent','Gaz','Irigații','Utilități în zonă'
+          ])}
+
+          ${renderCheckboxGroup('Amenajare străzi', [
+            'Străzi asfaltate','Străzi betonate','Străzi de pământ','Iluminat stradal','Mijloace de transport în comun','Străzi neamenajate','Străzi pietruite'
+          ])}
+
+          ${renderCheckboxGroup('Priveliște', [
+            'Vedere panoramică','Vedere spre lac','Vedere spre mare','Vedere spre munte','Vedere spre oraș'
+          ])}
+
+          ${renderCheckboxGroup('Parcare', [
+            'Garaj','Garaj subteran','Parcare acoperită','Parcare deschisă'
+          ])}
+
+        </div>
+      `;
+    }
+
+    // Agregare Context: câmpuri simple + grupuri checkbox + „Altele” la tip construcție
+    function buildContext(){
+      const parts = [];
+
+      // a) câmpuri simple
+      document.querySelectorAll('[data-field]').forEach(el => {
+        if (el.id === 'tipStruct' && el.value === 'Altele') return; // tratăm separat
+        let val = '';
+        if (el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+          val = (el.value || '').toString().trim();
+        }
+        const label = el.getAttribute('data-label') || el.id;
+        if (val) parts.push(`- ${label}: ${val}`);
+      });
+
+      // b) Tip construcție „Altele" (apartment și house)
+      const tipStruct = document.getElementById('tipStruct');
+      const tipStructOther = document.getElementById('tipStructOther');
+      if (tipStruct && tipStruct.value === 'Altele' && tipStructOther && tipStructOther.value.trim()){
+        parts.push(`- Tipul construcției: ${tipStructOther.value.trim()}`);
+      }
+      const tipStructHouse = document.getElementById('tipStructHouse');
+      const tipStructOtherHouse = document.getElementById('tipStructOtherHouse');
+      if (tipStructHouse && tipStructHouse.value === 'Altele' && tipStructOtherHouse && tipStructOtherHouse.value.trim()){
+        parts.push(`- Tipul construcției: ${tipStructOtherHouse.value.trim()}`);
+      }
+
+      // c) grupuri checkbox
+      const groupMap = new Map();
+      document.querySelectorAll('input[type="checkbox"][data-group]').forEach(chk => {
+        if (!chk.checked) return;
+        const g = chk.getAttribute('data-group');
+        if (!groupMap.has(g)) groupMap.set(g, []);
+        groupMap.get(g).push(chk.value);
+      });
+      groupMap.forEach((vals, label) => {
+        if (vals.length) parts.push(`- ${label}: ${vals.join(', ')}`);
+      });
+
+      return parts.join('\n');
+    }
+
+    let lastPrompt = '';
+
+    function generatePrompt() {
+      const contextBlock = buildContext();
+      lastPrompt = PROMPT_TEMPLATE(contextBlock);
+      toast('Prompt generat.', 'success');
+      return lastPrompt;
+    }
+
+    // Preview
+    const previewBtn = document.getElementById('previewBtn');
+    const previewBox = document.getElementById('previewBox');
+
+    previewBtn.addEventListener('click', () => {
+      const prompt = generatePrompt();
+      previewArea.style.display = 'block';
+      previewBox.textContent = prompt;
+      toast('Previzualizare prompt.');
+    });
+
+    // Generate explicit
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      generatePrompt();
+    });
+
+    // Copy to clipboard
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      if (!lastPrompt) generatePrompt();
+      try {
+        await navigator.clipboard.writeText(lastPrompt);
+        toast('Prompt copiat în clipboard.', 'success');
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = lastPrompt; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+        toast('Prompt copiat (fallback).', 'success');
+      }
+    });
+
+    // Reset
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      document.querySelectorAll('[data-field]').forEach(el => {
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = '';
+      });
+      document.querySelectorAll('input[type="checkbox"][data-group]').forEach(chk => chk.checked = false);
+      lastPrompt = '';
+      previewArea.style.display = 'none';
+      document.getElementById('dynamicFields').style.display = '';
+      toast('Formular resetat.');
+    });
+
+    // Hook pentru Etapa 2: încarcă setul corect după selectarea tipului
+    document.getElementById('propertyType').addEventListener('change', (e) => {
+      const type = e.target.value;
+      const mount = document.getElementById('dynamicFields');
+
+      if (type === 'Apartament') {
+        mount.innerHTML = renderApartmentFields();
+        wireApartmentDynamic();
+      } else if (type === 'Casă/Vilă') {
+        mount.innerHTML = renderHouseFields();
+        wireHouseDynamic();
+      } else if (type === 'Teren') {
+        mount.innerHTML = renderTerenFields();
+        // no special wiring required for teren
+      } else if (type) {
+        mount.innerHTML = `
+          <div class="field">
+            <div class="label">Întrebări specifice (${type})</div>
+            <div class="muted">Seturile pentru „${type}” vor fi adăugate în următoarele etape.</div>
+          </div>`;
+      } else {
+        mount.innerHTML = '';
+      }
+    });
+
+    // Logica „Altele” la tip construcție
+    function wireApartmentDynamic(){
+      const tip = document.getElementById('tipStruct');
+      const other = document.getElementById('tipStructOther');
+      if (!tip || !other) return;
+      const sync = () => { other.style.display = (tip.value === 'Altele') ? 'block' : 'none'; };
+      tip.addEventListener('change', sync);
+      sync();
+    }
+
+    function wireHouseDynamic(){
+      const tip = document.getElementById('tipStructHouse');
+      const other = document.getElementById('tipStructOtherHouse');
+      if (!tip || !other) return;
+      const sync = () => { other.style.display = (tip.value === 'Altele') ? 'block' : 'none'; };
+      tip.addEventListener('change', sync);
+      sync();
+    }
+
+    // Dacă era deja selectat „Apartament”, rehidratează
+    (function initIfType(){
+      const sel = document.getElementById('propertyType');
+      const mount = document.getElementById('dynamicFields');
+      if (!sel) return;
+      if (sel.value === 'Apartament'){
+        mount.innerHTML = renderApartmentFields();
+        wireApartmentDynamic();
+      } else if (sel.value === 'Casă/Vilă'){
+        mount.innerHTML = renderHouseFields();
+        wireHouseDynamic();
+      } else if (sel.value === 'Teren'){
+        mount.innerHTML = renderTerenFields();
+      }
+    })();
+  </script>
+
+  <!--
+  ========================
+  NOTE PENTRU IMPLEMENTARE (VS Code)
+  ========================
+  1) Salvează ca index.html în VS Code.
+  2) Deschide cu Live Server sau în browser.
+  3) Selectează „Apartament”, completează câmpuri, apasă „Previzualizează prompt”.
+  4) „Copiază prompt” îl pune în clipboard pentru ChatGPT.
+  -->
+</body>
+</html>
